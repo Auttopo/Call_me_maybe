@@ -51,7 +51,6 @@ class ParserJson(BaseModel):
                 data: str = file.read()
                 self.filtered = json.loads(data)
             self.filtered = self.validation(data=self.filtered).data
-            print(self.filtered)
         except Exception as e:
             raise ValueError(f"JSON can't be extract : {e}")
         return self
@@ -71,7 +70,7 @@ class ParserOutput(BaseModel):
                 self.path = self.path.removesuffix(".json") + "_1.json"
             else:
                 if i != 0:
-                    print(f"this file name already used, name set to : {self.path}")
+                    print(f"this file name already used, name set to : {self.path}", file=sys.strerr)
                 break;
             i += 1
         if i == 101:
