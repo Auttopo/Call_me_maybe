@@ -1,0 +1,11 @@
+.mypy_cache
+__pycache__
+__pycache__/*
+# data
+# data/*
+# llm_sdk
+# llm_sdk/*
+uv.lock
+# .gitignore
+.install_trace
+
