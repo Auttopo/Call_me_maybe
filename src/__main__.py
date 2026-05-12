@@ -31,63 +31,98 @@ def create_prompt(obj: Parser) -> list[dict[str, Any]]:
 
     return output
 
+def contrain(logits: list[Any], whitelist: list[int]) -> None:
+    
+    for i in range(len(logits)):
+        if i not in whitelist:
+            logits[i] = float("-inf")
+
+def constrained_decoding(
+        data: Parser, logits: list[Any],
+        i: list[int], sequence: list[int]) -> None:
+    if i == -1:
+        pass
+    elif i == -2:
+        pass
+    else:
+        contrain(logits, [sequence[i[0]]])
+    i[0] += 1
+
+
+def create_sequence(logits: list[float], prompt: str, dict_to_log: dict[str, int]) -> list[int]:
+
+    brac1 = "{"
+    sequence: list[int] = []
+
+    sequence_1: str = f'  {brac1} \n    "prompt": "{prompt}",\n    "name": "'
+    # -1
+    sequence_2: str = '",\n    "parameters": {'
+    # -2
+    sequence_3: str = '}\n  },'
+
+    for c in sequence_1:
+        sequence.append(dict_to_log[c])
+    sequence.append(-1)
+    for c in sequence_2:
+        sequence.append(dict_to_log[c])
+    sequence.append(-2)
+    for c in sequence_3:
+        sequence.append(dict_to_log[c])
+
+    return sequence
 
 def main(args: list[str]) -> None:
+
+    obj = Small_LLM_Model()
     data = Parser(args=sys.argv)
 #    print(data.function_definition)
 #    print(data.inputs)
 #    print(data.output)
 
     base_prompt = create_prompt(data)
-
-    obj = Small_LLM_Model()
     string = (
             base_prompt +
             "\nPrompts:\n" +
             "".join(["\"" + elem.prompt + "\"\n" for elem in data.inputs]) +
             "\nAnswer:\n"
             )
+
     tensi = obj.encode(string)
     keep = tensi.tolist()[0]
     answer: list[str] = []
-   
-    def p0(logits: Any) -> int:
-        i: int = 0
-        case: str
-        while i < len(logits):
-            case = obj.decode([[i]])[0]
-            if not case.startswith("[\n"):
-                logits[i] = float("-inf")
-            i += 1
+    logits: Any = obj.get_logits_from_input_ids(keep)
 
-        return 1
+    dict_to_log = dict()
+    dict_to_asc = dict()
 
-    def p1(logits: Any) -> int:
-        return 1
+    all_ascii: list[str] = [chr(i) for i in range(256)]
+    for i in range(len(logits)):
+        for c in all_ascii:
+            if obj.decode([[i]])[0] == c:
+                dict_to_log.update({c: i})
+                dict_to_asc.update({i: c})
 
-    phases: list[Callable] = [
-                p1,
-                p1,
-            ]
+    sequence = create_sequence(logits, data.inputs[0].prompt, dict_to_log)
 
-    i: int = 0
+    
+    i: list[int] = [0]
     debug = 0
-    while debug < 60:
+    while i[0] < 60:
         logits: Any = obj.get_logits_from_input_ids(keep)
 
         # CONSTRAINED DECODING
-        i = phases[i](logits)
+        constrained_decoding(data, logits, i, sequence)
         index = logits.index(max(logits))
         
         keep.append(index)
-        letters = obj.decode([[index]])[0]
-        answer.append(letters)
-        if letters.endswith("]"):
-            break
-        debug += 1
+#        letters = obj.decode([[index]])[0]
+#        answer.append(letters)
+#        if letters.endswith("]"):
+#            break
 
-    print("\n\nOUTPUT\n\n", string + "".join(answer))
-        
+#    print("\n\nOUTPUT\n\n", string + "".join(answer))
+    oute = obj.decode([keep])[0]
+    print("\n\nOUTPUT\n\n", oute)       
 
 if __name__ == "__main__":
     main(sys.argv)
