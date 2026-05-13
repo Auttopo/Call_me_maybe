@@ -89,8 +89,8 @@ class Parser(BaseModel):
     @model_validator(mode="after")
     def check_args(self) -> "ArgsCheck":
 
-        if self.output is None:
-            return
+      #  if self.output is None:
+      #      return
         check_fdf: bool = False
         check_inp: bool = False
         check_out: bool = False
