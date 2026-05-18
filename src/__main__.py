@@ -47,86 +47,93 @@ def contrain_basique(logits: list[Any], whitelist: str, dict_to_asc: dict[int, s
         if not case or (not whitelist.startswith(case)):
             logits[i] = float("-inf")
 
-def take_one(logits: list[Any], whitelist: str, dict_to_asc: dict[int, str]) -> None:
-    
-    pass
+def validate_case(data: str, memory: str) -> int:
+    authorize = [" null", " true", " false"]
+    if data.startswith(' "'):
+        match data.count('"'):
+            case 1:
+                return 1
+            case 2:
+                if data.endswith('"'):
+                    return 2
+                else:
+                    return 0
+            case _:
+                return 0
 
-def test_int(data: str) -> bool:
-    try:
-        float(data)
-    except Exception:
-        return False
-    return True
+    if data == " -" or data == " +":
+        return 1
+
+    if data.startswith(' '):
+        try:
+            float(data[1:])
+            return 1
+        except Exception:
+            try:
+                float(memory[1:])
+                return 3
+            except Exception:
+                pass
+
+    for elem in authorize:
+        if elem.startswith(data):
+            if elem == data:
+                return 2
+            else:
+                return 1
+    return 0
 
 def choose_param(
         logits: list[Any], sub_sequence: list [str | int],
-        dict_to_asc: dict[int, str]) -> int:
+        dict_to_asc: dict[int, str]) -> tuple[int, int]:
 
-    last_i = len(sub_sequence) - 1
+    last_i: int = len(sub_sequence) - 1
+    memory: str = sub_sequence[last_i]
 
     index: int = logits.index(max(logits))
-    if sub_sequence[last_i]:
-        while 1:
-            case = dict_to_asc[index]
-            if case.startswith(',') or case.startswith('}'):
-                if sub_sequence[last_i][0] == '"':
-                    if sub_sequence[last_i][len(sub_sequence[last_i]) - 1] == '"':
-                        sub_sequence[last_i] = ""
-                        return -1
-                else:
-                    sub_sequence[last_i] = ""
-                    return -1
-            if sub_sequence[last_i][0] == '"':
-                if '"' in case and (not case.endswith('"')):
-                    logits[index] = float("-inf")
-                    index: int = logits.index(max(logits))
-                else:
-                    break
-            else:
-                if '.' in sub_sequence[last_i]:
-                    if '.' in case:
-                        logits[index] = float("-inf")
-                        index: int = logits.index(max(logits))
-                    if not case.isdigit():
-                        logits[index] = float("-inf")
-                        index: int = logits.index(max(logits))
-                elif case.count('.') > 1 or (not case.lstrip('.').isdigit()):
-                    logits[index] = float("-inf")
-                    index: int = logits.index(max(logits))
-                else:
-                    break
-    else:
-        while 1:
-            case = dict_to_asc[index]
-            if '"' in case and (not case.startswith('"')):
+
+
+    while 1:
+        case = dict_to_asc[index]
+        test_case = memory + case
+        match validate_case(test_case, memory):
+            case 0:
                 logits[index] = float("-inf")
                 index: int = logits.index(max(logits))
-            elif not test_int(case):
-                logits[index] = float("-inf")
-                index: int = logits.index(max(logits))
-            else:
+            case 1:
                 break
+            case 2:
+                sub_sequence[last_i] = ""
+                return (index, -1)
+            case 3:
+                sub_sequence[last_i] = ""
+                return (index, -2)
+
 
     sub_sequence[last_i] += case 
-    return index
+    return (index, 0)
 
 
 def contrain_param(
         logits: list[Any], sub_sequence: list [str | int],
-        dict_to_asc: dict[int, str]) -> int:
+        dict_to_asc: dict[int, str]) -> int | None:
 
     i = sub_sequence[0]
     match sub_sequence[i]:
         case -1:
-            index: int = choose_param(logits, sub_sequence, dict_to_asc)
-            if index == -1:
+            index:int
+            check: int
+            index, check = choose_param(logits, sub_sequence, dict_to_asc)
+            if check < 0:
                 sub_sequence[0] += 1
-                return None
+                if check == -2:
+                    return None
         case -2:
-            index: int = choose_param(logits, sub_sequence, dict_to_asc)
-            if index == -1:
+            index, check = choose_param(logits, sub_sequence, dict_to_asc)
+            if check < 0:
                 sub_sequence[0] = -1
-                return None
+                if check == -2:
+                    return None
         case _:
             contrain_basique(logits, sub_sequence[i], dict_to_asc)
             index: int = logits.index(max(logits))
@@ -158,9 +165,9 @@ def create_sub_sequence(iterable: list[dict[str, Any]], func_name: str) -> list[
             break
 
     for elem in func_dict["parameters"].keys():
-        sequence.append(f" {elem}: ")
+        sequence.append(f", {elem}:")
         sequence.append(-1)
-    sequence[1] = sequence[1][1:]
+    sequence[1] = sequence[1][2:]
     sequence[len(sequence) - 1] = -2
     sequence.append("")
 
@@ -169,7 +176,7 @@ def create_sub_sequence(iterable: list[dict[str, Any]], func_name: str) -> list[
 
 def constrained_decoding(
         data: Parser, logits: list[Any],
-        sequence: list[str | int], dict_to_asc: dict[int, str]) -> int:
+        sequence: list[str | int], dict_to_asc: dict[int, str]) -> int | None:
     i = sequence[0]
    # print("\nBEFOR\n", sequence)
     index = None # TEMPORAIRE
@@ -269,13 +276,13 @@ def main(args: list[str]) -> None:
             logits: Any = obj.get_logits_from_input_ids(keep)
 
             # CONSTRAINED DECODING
-            index: int = constrained_decoding(data, logits, sequence, dict_to_asc)
+            index: int | None = constrained_decoding(data, logits, sequence, dict_to_asc)
             
             if index == -1:
                 print(f"ANSWER {i} / {last_i} DONE");
                 break
 
-            if index:
+            if not index is None:
                 keep.append(index)
         i += 1
 
