@@ -15,18 +15,6 @@
     }
   },
   {
-    "name": "fn_greet",
-    "description": "Generate a greeting message for a person by name.",
-    "parameters": {
-      "name": {
-        "type": "string"
-      }
-    },
-    "returns": {
-      "type": "string"
-    }
-  },
-  {
     "name": "fn_reverse_string",
     "description": "Reverse a string and return the reversed result.",
     "parameters": {
@@ -39,15 +27,30 @@
     }
   },
   {
-    "name": "fn_get_square_root",
-    "description": "Calculate the square root of a number.",
+    "name": "fn_transform_type",
+    "description": "transform the type of input in int",
     "parameters": {
       "a": {
-        "type": "number"
+        "type": "bool"
       }
     },
     "returns": {
-      "type": "number"
+      "type": "int"
+    }
+  },
+  {
+    "name": "fn_combine_bool",
+    "description": "recreate the boolean logic depending of inputs",
+    "parameters": {
+      "1": {
+        "type": "bool"
+      },
+      "2": {
+        "type": "bool"
+      }
+    },
+    "returns": {
+      "type": "bool"
     }
   },
   {

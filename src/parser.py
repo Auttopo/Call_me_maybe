@@ -84,6 +84,7 @@ class Parser(BaseModel):
     function_definition: list[FuncDefsDict] = []
     inputs: list[InputsDict] = []
     output: str = ""
+    strict: bool = False
     _end: bool = False
 
     @model_validator(mode="after")
@@ -95,7 +96,9 @@ class Parser(BaseModel):
         check_inp: bool = False
         check_out: bool = False
         self.args.append("")
-        for i in range(len(self.args)):
+
+        verified = [False for _ in range(len(self.args))]
+        for i in range(1, len(self.args) - 1):
             match self.args[i]:
                 case "--functions_definition":
                     check_fdf = True
@@ -103,20 +106,28 @@ class Parser(BaseModel):
                             path=self.args[i + 1],
                             validation=ValidDefsJson
                             ).filtered)
+                    verified[i + 1] = True
                 case "--input":
                     check_inp = True
                     self.inputs.extend(ParserJson(
                             path=self.args[i + 1],
                             validation=ValidInputJson).filtered)
+                    verified[i + 1] = True
                 case "--output":
                     if check_out:
                         raise ValueError("only one output name can be set")
                     check_out = True
                     self.output = ParserOutput(path=self.args[i + 1]).path
+                    verified[i + 1] = True
+                case "--strict":
+                    self.strict = True
+                case _:
+                    if not verified[i]:
+                        raise ValueError(f"unknow parameter {self.args[i]} at {i}")
 
         if self._end:
             return
-        self.args = []
+        self.args = [""]
         if not check_fdf:
             self.args.extend(["--functions_definition", "data/input/functions_definition.json"])
             self._end = True
@@ -125,7 +136,8 @@ class Parser(BaseModel):
             self._end = True
         if not check_out:
             self.args.extend(["--output", "data/output/output.json"])
-        if self.args:
+            self._end = True
+        if len(self.args) > 1:
             self.check_args()
 
         return self
