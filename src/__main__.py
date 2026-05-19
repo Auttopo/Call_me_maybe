@@ -61,7 +61,7 @@ def validate_case(data: str, memory: str) -> int:
                 if data.endswith('"'):
                     return 2
                 else:
-                    return 0
+                    return 4
             case _:
                 return 0
 
@@ -89,7 +89,7 @@ def validate_case(data: str, memory: str) -> int:
 
 def choose_param(
         logits: list[Any], sub_sequence: list [str | int],
-        dict_to_asc: dict[int, str]) -> tuple[int, int]:
+        dict_to_asc: dict[int, str], dict_to_log: dict[int, str]) -> tuple[int, int]:
 
     last_i: int = len(sub_sequence) - 1
     memory: str = sub_sequence[last_i]
@@ -111,6 +111,16 @@ def choose_param(
             case 3:
                 sub_sequence[last_i] = ""
                 return (index, -2)
+            case 4:
+                sub_data = case.split('"')
+                sub_data.pop()
+                case = '"'.join(sub_data) + '"'
+                index = dict_to_log.get(case)
+                if index is not None:
+                    sub_sequence[last_i] = ""
+                    return (index, -1)
+                logits[index] = float("-inf")
+
 
 
     sub_sequence[last_i] += case 
@@ -126,13 +136,13 @@ def contrain_param(
         case -1:
             index:int
             check: int
-            index, check = choose_param(logits, sub_sequence, dict_to_asc)
+            index, check = choose_param(logits, sub_sequence, dict_to_asc, dict_to_log)
             if check < 0:
                 sub_sequence[0] += 1
                 if check == -2:
                     return None
         case -2:
-            index, check = choose_param(logits, sub_sequence, dict_to_asc)
+            index, check = choose_param(logits, sub_sequence, dict_to_asc, dict_to_log)
             if check < 0:
                 sub_sequence[0] = -1
                 if check == -2:
@@ -275,7 +285,7 @@ def main(args: list[str]) -> None:
     with open(data.output, 'a') as file:
         file.write('\n')
    
-    i: int = 0
+    i: int = 8
     last_i = len(data.inputs) - 1
     while i <= last_i:
         sequence = create_sequence(data.inputs[i].prompt, dict_to_log, (i == 0), (i == last_i))
@@ -297,7 +307,9 @@ def main(args: list[str]) -> None:
                 keeps[i].append(index)
                 answer.append(index)
         with open(data.output, 'a') as file:
+            t_one = time.time()
             file.write(obj.decode(answer))
+            print(time.time() - t_one, "TIME TO WRITE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         i += 1
 
 #    print("\n\nOUTPUT\n\n", string + "".join(answer))

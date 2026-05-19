@@ -70,7 +70,7 @@ class ParserOutput(BaseModel):
                 self.path = self.path.removesuffix(".json") + "_1.json"
             else:
                 if i != 0:
-                    print(f"this file name already used, name set to : {self.path}", file=sys.strerr)
+                    print(f"this file name already used, name set to : {self.path}", file=sys.stderr)
                 break;
             i += 1
         if i == 101:
