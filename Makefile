@@ -34,11 +34,11 @@ fclean:
 	uv cache prune
 
 lint:
-	python3 -m flake8 . --exclude data,uv_lock,.venv,llm_sdk/* ; \
-	python3 -m mypy . --exclude data,uv_lock,.venv,llm_sdk/* --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+	python3 -m flake8 . --exclude data,uv_lock,.venv,llm_sdk ; \
+	python3 -m mypy . --exclude data,uv_lock,.venv,llm_sdk --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 lint-strict:
-	python3 -m flake8 . --exclude data,uv_lock,.venv,llm_sdk/* ; \
-	python3 -m mypy . --exclude data,uv_lock,.venv,llm_sdk/* --strict
+	python3 -m flake8 . --exclude data,uv_lock,.venv,llm_sdk ; \
+	python3 -m mypy . --exclude data,uv_lock,.venv,llm_sdk --strict
 
 .PHONY : all run install debug clean fclean lint lint-strict

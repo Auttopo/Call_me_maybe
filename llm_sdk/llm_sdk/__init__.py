@@ -9,8 +9,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenize
 from huggingface_hub import hf_hub_download
 import os
 
-
-logging.set_verbosity_error()  # keep the console clean
+# keep the console clean
+logging.set_verbosity_error() # type: ignore[unused-ignore, no-untyped-call]
 
 
 class Small_LLM_Model:
@@ -53,7 +53,7 @@ class Small_LLM_Model:
         self._dtype = dtype
 
         # --- load tokenizer & model -------------------------------------------------
-        self._tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
+        self._tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained( # type: ignore
             model_name, trust_remote_code=trust_remote_code
         )
         if self._tokenizer.pad_token_id is None:
@@ -66,8 +66,8 @@ class Small_LLM_Model:
             device_map="auto" if self._device == "cuda" else None,
             trust_remote_code=trust_remote_code,
         )
-        self._model.to(self._device)
-        self._model.eval()
+        self._model.to(self._device) # type: ignore
+        self._model.eval() # type: ignore[unused-ignore, no-untyped-call]
 
         # switch to inference-only mode
         for p in self._model.parameters():
