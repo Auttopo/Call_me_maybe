@@ -15,10 +15,10 @@ def get_json(iterable: list[Any]) -> str:
         iterable[i] = iterable[i].model_dump()
     out = json.dumps([elem for elem in iterable])
     for elem in iterable:
-        elem["name"] = '"' + elem["name"] + '"'
+        elem["name"] = '"' + elem["name"].replace('"', "'") + '"'
         inside_data = [[key, value] for key, value in elem["parameters"].items()]
         for key, value in inside_data:
-            elem["parameters"]['"' + key + '"'] = elem["parameters"].pop(key)
+            elem["parameters"]['"' + key.replace('"', "'") + '"'] = elem["parameters"].pop(key)
 
     return out
 
@@ -89,6 +89,8 @@ def validate_case(data: str, memory: str) -> int:
     if data.startswith(' '):
         try:
             float(data[1:])
+            if memory[1:]:
+                float(memory[1:])
             return 1
         except Exception:
             try:
@@ -132,12 +134,12 @@ def choose_param(
                 sub_data.pop()
                 case = '"'.join(sub_data) + '"'
                 index = contrain_basic(logits, case, dict_to_asc, dict_to_log)
-                sub_sequence[last_i] = ""
                 if dict_to_asc[index].endswith('"'):
+                    sub_sequence[last_i] = ""
                     return (index, -1)
                 else:
                     break
-        print(validate_case(test_case, memory))
+        print(validate_case(test_case, memory), f",{test_case}, ,{memory}, ,{index}, ,{dict_to_asc[index]},")
 
     sub_sequence[last_i] += case 
     return (index, 0)
@@ -248,11 +250,11 @@ def create_sequence(prompt: str, dict_to_log: dict[str, int], start: bool = Fals
 
     brac1 = "{"
     sequence: list[str | int] = [1]
-
+    
     if start:
-        sequence_1: str = f'[\n{brac1}"prompt": "{prompt}", "name": '
+        sequence_1: str = f'[\n{brac1}"prompt": "{prompt.replace('"', "'")}", "name": '
     else:
-        sequence_1: str = f'{brac1}"prompt": "{prompt}", "name": '
+        sequence_1: str = f'{brac1}"prompt": "{prompt.replace('"', "'")}", "name": '
 
     # -1
     sequence_2: str = ', "parameters": {'
@@ -289,7 +291,7 @@ def main(args: list[str]) -> None:
     prompts = [(
             base_prompt +
             "\nPrompt:\n" +
-            '"' + elem.prompt + '"\n' +
+            '"' + elem.prompt.replace('"', "'") + '"\n' +
             "\nAnswer:\n"
             ) for elem in data.inputs]
     encoded = []
@@ -304,17 +306,16 @@ def main(args: list[str]) -> None:
     dict_to_log = dict()
     black_list = np.zeros(len(logits), dtype=bool)
     for i, char in enumerate(dict_to_asc):
-        if dict_to_log.get(char) is not None:
-            black_list[i] = True
-        else:
+        if dict_to_log.get(char) is None:
             dict_to_log.update({char: i})
+        else:
+            black_list[i] = True
 
-    return
-    i: int = 8
+    i: int = 0
     last_i = len(data.inputs) - 1
-    answer: list[Any] = [[] for _ in range(last_i)]
+    answer: list[Any] = [[] for _ in range(last_i + 1)]
     masque = np.ones(len(logits), dtype=bool)
-    while i <= 8:
+    while i <= last_i:
         sequence = create_sequence(data.inputs[i].prompt, dict_to_log, (i == 0), (i == last_i))
         while 1:
             print("STATUS:\n", sequence)
@@ -324,6 +325,7 @@ def main(args: list[str]) -> None:
             if data.strict or \
                     (isinstance(sequence[seq_i], int) and isinstance(sub_sequence[sub_seq_i], int)):
                 logits: Any = np.array(obj.get_logits_from_input_ids(keeps[i]))
+                logits[black_list]
 
                 index: int | None = constrained_decoding(data, logits, sequence,
                                                          dict_to_asc, dict_to_log)
