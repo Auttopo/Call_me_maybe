@@ -39,7 +39,7 @@ def create_prompt(funcs: list[Any]) -> str:
 
 
 def contrain_longer(
-                    logits: NDArray, whitelist: str,
+                    logits: NDArray[Any], whitelist: str,
                     dict_to_asc: list[str], dict_to_log: dict[str, int]
                     ) -> int:
 
@@ -56,11 +56,11 @@ def contrain_longer(
         if len(dict_to_asc[elem]) > len(dict_to_asc[longer]):
             longer = elem
 
-    return longer
+    return int(longer)
 
 
 def contrain_basic(
-                    logits: NDArray, whitelist: str,
+                    logits: NDArray[Any], whitelist: str,
                     dict_to_asc: list[str], dict_to_log: dict[str, int]
                    ) -> int:
 
@@ -115,7 +115,7 @@ def validate_case(data: str, memory: str) -> int:
 
 
 def choose_param(
-        logits: NDArray, sub_sequence: list[str | int],
+        logits: NDArray[Any], sub_sequence: list[str | int],
         dict_to_asc: list[str], dict_to_log: dict[str, int]
         ) -> tuple[int, int]:
 
@@ -153,7 +153,7 @@ def choose_param(
 
 
 def contrain_param(
-        logits: NDArray, sub_sequence: list[str | int],
+        logits: NDArray[Any], sub_sequence: list[str | int],
         dict_to_asc: list[str], dict_to_log: dict[str, int]) -> int | None:
 
     i = int(sub_sequence[0])
@@ -184,7 +184,7 @@ def contrain_param(
 
 
 def contrain_func(
-        logits: NDArray, previous: str,
+        logits: NDArray[Any], previous: str,
         whitelist: list[dict[str, Any]],
         dict_to_asc: list[str], dict_to_log: dict[str, int]) -> int:
 
@@ -226,7 +226,7 @@ def create_sub_sequence(
 
 
 def constrained_decoding(
-        function_definition: list[dict[str, Any]], logits: NDArray,
+        function_definition: list[dict[str, Any]], logits: NDArray[Any],
         sequence: list[Any],
         dict_to_asc: list[str], dict_to_log: dict[str, int]) -> int | None:
 
