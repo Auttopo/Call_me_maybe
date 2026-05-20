@@ -2,7 +2,7 @@
 name = "call_me_maybe"
 version = "1.0.0"
 description = "module to optimizing small llm to generate 'Function Calling System'"
-requires-python = "==3.13"
+requires-python = "==3.13.*"
 dependencies = [
 	"numpy",
 	"pydantic",
