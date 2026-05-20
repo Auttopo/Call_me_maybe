@@ -1,7 +1,6 @@
 ARGS=
 PROGRAM= src
 TRACE= .install_trace
-ENV= .venv
 PYTHON= python
 
 all : run
@@ -15,32 +14,31 @@ install $(TRACE) : pyproject.toml Makefile
 	uv sync ; \
 	touch .install_trace
 
-run-trace : $(TRACE)
-	uv run $(PYTHON) -m pdb $(PROGRAM) $(ARGS) traceback
-
-debug :
+debug:
 	uv run $(PYTHON) -m pdb $(PROGRAM) $(ARGS)
 
 clean:
-	. $(ENV)/bin/activate && \
+	$(RM) -r data/output/*
 	$(RM) -r __pycache__
+	$(RM) -r src/__pycache__
 	$(RM) -r .mypy_cache
 
 fclean:
-	. $(ENV)/bin/activate && \
+	$(RM) -r data/output/*
 	$(RM) -r __pycache__
+	$(RM) -r src/__pycache__
 	$(RM) -r .mypy_cache
 	$(RM) .install_trace
-	$(RM) -r $(ENV)
-	uv cache prune
+	$(RM) -r .venv
 	$(RM) uv.lock
+	uv cache prune
 
-lint :
-	uv run $(PYTHON) -m flake8 --exclude llm_sdk,$(ENV); \
-	uv run $(PYTHON) -m mypy . --exclude llm_sdk --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+lint:
+	python3 -m flake8 . --exclude data,uv_lock,.venv,llm_sdk/* ; \
+	python3 -m mypy . --exclude data,uv_lock,.venv,llm_sdk/* --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
-lint-strict :
-	uv run $(PYTHON) -m flake8 --exclude llm_sdk,$(ENV); \
-	uv run $(PYTHON) -m mypy . --exclude llm_sdk --strict
+lint-strict:
+	python3 -m flake8 . --exclude data,uv_lock,.venv,llm_sdk/* ; \
+	python3 -m mypy . --exclude data,uv_lock,.venv,llm_sdk/* --strict
 
-.PHONY : all run install run-trace debug clean fclean lint lint-strict
+.PHONY : all run install debug clean fclean lint lint-strict

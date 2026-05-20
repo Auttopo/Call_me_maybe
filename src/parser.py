@@ -102,7 +102,6 @@ class Parser(BaseModel):
     strict: bool = False
     _end: bool = False
 
-
     def validation(self) -> "Parser":
         """ main validation process """
 

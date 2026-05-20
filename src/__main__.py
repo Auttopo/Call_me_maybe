@@ -15,9 +15,11 @@ def get_json(iterable: list[Any]) -> str:
     out = json.dumps([elem for elem in iterable])
     for elem in iterable:
         elem["name"] = '"' + elem["name"].replace('"', "'") + '"'
-        inside_data = [[key, value] for key, value in elem["parameters"].items()]
+        inside_data = [
+                [key, value] for key, value in elem["parameters"].items()]
         for key, value in inside_data:
-            elem["parameters"]['"' + key.replace('"', "'") + '"'] = elem["parameters"].pop(key)
+            new_name = '"' + key.replace('"', "'") + '"'
+            elem["parameters"][new_name] = elem["parameters"].pop(key)
 
     return out
 
@@ -302,7 +304,8 @@ def main(args: list[str]) -> None:
         file.write('\n')
 
     obj = Small_LLM_Model()
-    function_definition = [elem.model_dump() for elem in data.function_definition]
+    function_definition = [
+            elem.model_dump() for elem in data.function_definition]
     base_prompt = create_prompt(function_definition)
 
     prompts = [(
@@ -318,7 +321,8 @@ def main(args: list[str]) -> None:
 
     logits = np.array(obj.get_logits_from_input_ids(keeps[0]))
 
-    dict_to_asc: list[str] = list(obj.decode([[i] for i in range(len(logits))]))
+    dict_to_asc: list[str] = list(
+            obj.decode([[i] for i in range(len(logits))]))
     dict_to_log: dict[str, int] = dict()
     black_list = np.zeros(len(logits), dtype=bool)
     for i, char in enumerate(dict_to_asc):
@@ -348,7 +352,8 @@ def main(args: list[str]) -> None:
                 logits = np.array(obj.get_logits_from_input_ids(keeps[i]))
                 logits[black_list]
 
-                index: int | None = constrained_decoding(function_definition, logits,
+                index: int | None = constrained_decoding(function_definition,
+                                                         logits,
                                                          sequence,
                                                          dict_to_asc,
                                                          dict_to_log)
