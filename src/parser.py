@@ -164,4 +164,15 @@ class Parser(BaseModel):
     def check_args(self) -> "Parser":
         """ Pydantic validation method """
         self.validation()
+
+        if len(self.inputs) < 1:
+            raise Exception("need at least one input")
+        if len(self.function_definition) < 1:
+            raise Exception("need at least one function description")
+        try:
+            with open(self.output, 'a') as file:
+                file.write('\n')
+        except Exception as e:
+            raise ValueError(f"{e}")
+
         return self

@@ -4,6 +4,7 @@ from src.parser import Parser
 import sys
 from typing import Any
 import json
+from tqdm import tqdm
 import numpy as np
 from numpy.typing import NDArray
 
@@ -300,9 +301,6 @@ def create_sequence(
 def main(args: list[str]) -> None:
 
     data = Parser(args=sys.argv)
-    with open(data.output, 'a') as file:
-        file.write('\n')
-
     obj = Small_LLM_Model()
     function_definition = [
             elem.model_dump() for elem in data.function_definition]
@@ -331,16 +329,15 @@ def main(args: list[str]) -> None:
         else:
             black_list[i] = True
 
-    i = 0
     last_i = len(data.inputs) - 1
     answer: list[Any] = [[] for _ in range(last_i + 1)]
     masque = np.ones(len(logits), dtype=bool)
-    while i <= last_i:
+    print(end="generating answer: ")
+    for i in tqdm(range(last_i + 1)):
         sequence = create_sequence(
                 data.inputs[i].prompt, dict_to_log,
                 (i == 0), (i == last_i))
         while 1:
-            print("STATUS:\n", sequence)
             sub_sequence: list[Any] = sequence[8]
             seq_i: int = int(sequence[0])
             sub_seq_i: int = int(sub_sequence[0])
@@ -380,13 +377,12 @@ def main(args: list[str]) -> None:
                         sequence[0] += 1
 
             if index == -1:
-                print(f"ANSWER {i} / {last_i} DONE")
                 break
 
             if index is not None:
                 keeps[i].append(index)
                 answer[i].append(index)
-        i += 1
+
     outs = obj.decode(answer)
     with open(data.output, 'a') as file:
         for elem in outs:
@@ -395,9 +391,8 @@ def main(args: list[str]) -> None:
 
 if __name__ == "__main__":
 
-    main(sys.argv)
     try:
-        pass
+        main(sys.argv)
     except KeyboardInterrupt:
         print("execution killed from keyboard")
     except BaseException as e:
