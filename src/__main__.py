@@ -39,8 +39,8 @@ def create_prompt(funcs: list[Any]) -> str:
         "[{\"prompt\":\"...\",\"name\":\"...\",\"parameters\":{...}} ...]\n"
         "- prompt: original question\n"
         "- name: function name\n"
-        "- parameters: values from prompt matching parameter names and types\n"
-        "Numbers are not in quotation marks\n"
+        "- parameters: values from prompt matching parameter names and types."
+        ' Exemple: a: 1.0, b: 2.0, name: "text", active: true\n'
         "No explanation, no extra text.\n"
     )
     return output
@@ -85,6 +85,10 @@ def contrain_basic(
 
 def validate_case(data: str, memory: str) -> int:
     authorize = [" null", " true", " false"]
+
+    if data == " ":
+        return 1
+
     if data.startswith(' "'):
         match data.count('"'):
             case 1:
@@ -103,8 +107,6 @@ def validate_case(data: str, memory: str) -> int:
     if data.startswith(' '):
         try:
             float(data[1:])
-            if memory[1:]:
-                float(memory[1:])
             return 1
         except Exception:
             try:
@@ -143,19 +145,27 @@ def choose_param(
                 sub_sequence[last_i] = ""
                 return (index, -1)
             case 3:
-                sub_sequence[last_i] = ""
-                return (index, -2)
+                if '.' in test_case:
+                    if test_case.endswith('.'):
+                        index = contrain_longer(
+                                logits, "0", dict_to_asc, dict_to_log)
+                        break
+                    else:
+                        sub_sequence[last_i] = ""
+                        return (index, -2)
+                else:
+                    index = contrain_longer(
+                            logits, ".0", dict_to_asc, dict_to_log)
+                    break
             case 4:
                 sub_data = case.split('"')
                 sub_data.pop()
                 case = '"'.join(sub_data) + '"'
-                index = contrain_basic(logits, case, dict_to_asc, dict_to_log)
-                if dict_to_asc[index].endswith('"'):
-                    sub_sequence[last_i] = ""
-                    return (index, -1)
-                else:
-                    break
+                index = contrain_longer(logits, case, dict_to_asc, dict_to_log)
+                sub_sequence[last_i] = ""
+                return (index, -1)
 
+    case = dict_to_asc[index]
     sub_sequence[last_i] = str(sub_sequence[last_i]) + case
     return (index, 0)
 
@@ -345,6 +355,7 @@ def main(args: list[str]) -> None:
                 data.inputs[i].prompt, dict_to_log,
                 (i == 0), (i == last_i))
         while 1:
+            print(sequence)
             sub_sequence: list[Any] = sequence[8]
             seq_i: int = int(sequence[0])
             sub_seq_i: int = int(sub_sequence[0])
