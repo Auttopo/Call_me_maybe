@@ -355,7 +355,6 @@ def main(args: list[str]) -> None:
                 data.inputs[i].prompt, dict_to_log,
                 (i == 0), (i == last_i))
         while 1:
-            print(sequence)
             sub_sequence: list[Any] = sequence[8]
             seq_i: int = int(sequence[0])
             sub_seq_i: int = int(sub_sequence[0])
