@@ -313,7 +313,7 @@ def main(args: list[str]) -> None:
     prompts = [(
             base_prompt +
             "\nPrompt:\n" +
-            '"' + elem.prompt.replace('"', "'") + '"\n' +
+            '"' + elem.prompt.replace('"', "'").replace("\\", "\\\\") + '"\n' +
             "\nAnswer:\n"
             ) for elem in data.inputs]
     encoded = []
