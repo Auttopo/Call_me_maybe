@@ -310,15 +310,17 @@ def main(args: list[str]) -> None:
             elem.model_dump() for elem in data.function_definition]
     base_prompt = create_prompt(function_definition)
 
+    for elem in data.inputs:
+        elem.prompt = elem.prompt.replace('"', "'").replace("\\", "\\\\")
     prompts = [(
             base_prompt +
             "\nPrompt:\n" +
-            '"' + elem.prompt.replace('"', "'").replace("\\", "\\\\") + '"\n' +
+            '"' + elem.prompt + '"\n' +
             "\nAnswer:\n"
             ) for elem in data.inputs]
     encoded = []
-    for elem in prompts:
-        encoded.append(obj.encode(elem))
+    for prompt in prompts:
+        encoded.append(obj.encode(prompt))
     keeps = [elem.tolist()[0] for elem in encoded]
 
     logits = np.array(obj.get_logits_from_input_ids(keeps[0]))
@@ -389,8 +391,8 @@ def main(args: list[str]) -> None:
 
     outs = obj.decode(answer)
     with open(data.output, 'a') as file:
-        for elem in outs:
-            file.write(elem)
+        for out in outs:
+            file.write(out)
 
 
 if __name__ == "__main__":
