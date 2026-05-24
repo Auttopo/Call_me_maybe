@@ -15,11 +15,15 @@ def get_json(iterable: list[Any]) -> str:
 
     out = json.dumps([elem for elem in iterable])
     for elem in iterable:
-        elem["name"] = '"' + elem["name"].replace('"', "'") + '"'
+        elem["name"] = (
+                        '"' +
+                        elem["name"].replace('"', "'").replace("\\", "\\\\")
+                        + '"'
+                        )
         inside_data = [
                 [key, value] for key, value in elem["parameters"].items()]
         for key, value in inside_data:
-            new_name = '"' + key.replace('"', "'") + '"'
+            new_name = '"' + key.replace('"', "'").replace("\\", "\\\\") + '"'
             elem["parameters"][new_name] = elem["parameters"].pop(key)
 
     return out
