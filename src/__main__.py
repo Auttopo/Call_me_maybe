@@ -40,7 +40,6 @@ def create_prompt(funcs: list[Any]) -> str:
         "- prompt: original question\n"
         "- name: function name\n"
         "- parameters: values from prompt matching parameter names and types\n"
-        "All numbers are floats (e.g. 1.0, 42.0, 3.14)\n"
         "Numbers are not in quotation marks\n"
         "No explanation, no extra text.\n"
     )
@@ -340,7 +339,7 @@ def main(args: list[str]) -> None:
     last_i = len(data.inputs) - 1
     answer: list[Any] = [[] for _ in range(last_i + 1)]
     masque = np.ones(len(logits), dtype=bool)
-    print(end="generating answer: ")
+    print("Generating answer:")
     for i in tqdm(range(last_i + 1)):
         sequence = create_sequence(
                 data.inputs[i].prompt, dict_to_log,
