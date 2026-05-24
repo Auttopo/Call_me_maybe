@@ -40,9 +40,9 @@ def create_prompt(funcs: list[Any]) -> str:
         "- prompt: original question\n"
         "- name: function name\n"
         "- parameters: values from prompt matching parameter names and types\n"
-        "Integers must be written with a trailing .0\n"
+        "All numbers are floats (e.g. 1.0, 42.0, 3.14)\n"
         "Numbers are not in quotation marks\n"
-        "No explanation, no extra text. "
+        "No explanation, no extra text.\n"
     )
     return output
 
